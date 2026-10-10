@@ -78,10 +78,19 @@
 
   <div class="note">
     <h3>What changes on Pro</h3>
-    <p>The verdict is the main difference. The free tier runs on deterministic pattern matching, which finds
-    deadlines, disqualifying clauses, required documents and thresholds reliably. Pro adds a language model
-    pass that reads requirement structure the patterns cannot see, then checks your saved company profile
-    against every mandatory line and returns a bid or no-bid verdict with named blockers.</p>
+    <p>The extraction itself runs on the same AI for everyone. Pro adds the part that needs your
+    own company: your profile is saved and mapped against every mandatory line, and you get a
+    bid or no-bid verdict with the blockers named, plus longer documents and a higher monthly
+    allowance.</p>
+  </div>
+
+  <div class="note">
+    <h3>How the AI is constrained</h3>
+    <p>Reading a tender is not a generation problem, so the model is never allowed to invent text.
+    Every sentence it produces is matched against your uploaded PDF. If a sentence cannot be found
+    in your document, it is deleted rather than shown to you. When the language provider's quota
+    is exhausted, extraction falls back to deterministic pattern matching instead of failing, and
+    the report states which engine ran.</p>
   </div>
 
   <div class="note">

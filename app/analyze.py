@@ -1,10 +1,11 @@
 import difflib
 import json
 import re
+import time
 from typing import Any
 
 from . import db, llm, rules
-from .config import MIN_VERIFIED_RATIO
+from .config import LLM_DELAY_MS, MIN_VERIFIED_RATIO
 from .extract import Chunk, Page, chunk_pages, load_pages
 
 EXTRACT_PROMPT = llm.load_prompt("extract_requirements.md")
@@ -148,18 +149,29 @@ def extract_requirements(chunks: list[Chunk], scan: dict) -> tuple[list[dict], d
 
     collected: list[dict] = []
     ok = failed = blocked = 0
+    rate_limited = False
 
     for chunk in chunks:
+        if rate_limited:
+            failed += 1
+            continue
         user = (
             "Excerpt follows.\n\n" + chunk.text +
             "\n\nExtract every requirement from pages " + str(chunk.start_page) + " to " + str(chunk.end_page) + "."
         )
         try:
             raw = llm.complete(EXTRACT_PROMPT, user, json_mode=True, temperature=0.0)
+        except llm.RateLimited:
+            rate_limited = True
+            db.log_event("", "rate_limited", f"at chunk {chunk.index}, falling back to rules")
+            continue
         except Exception as exc:
             failed += 1
             db.log_event("", "chunk_failed", f"chunk {chunk.index}: {exc}")
             continue
+
+        if LLM_DELAY_MS:
+            time.sleep(LLM_DELAY_MS / 1000)
 
         parsed = llm.parse_json(raw)
         if parsed is None:
@@ -177,6 +189,13 @@ def extract_requirements(chunks: list[Chunk], scan: dict) -> tuple[list[dict], d
             item["verified"] = True
             item["source"] = "llm"
             collected.append(item)
+
+    if rate_limited and ok == 0:
+        db.log_event("", "rate_limited_fallback", "no chunk completed before the limit")
+        items = _fallback_requirements(scan)
+        return _dedupe(items), {"engine": "rules", "verified_ratio": 1.0, "chunks_ok": 0,
+                                "chunks_failed": failed, "hallucinations_blocked": blocked,
+                                "rate_limited": True}
 
     if ok == 0:
         items = _fallback_requirements(scan)
@@ -227,7 +246,10 @@ def _normalize_verdict(raw: Any) -> dict:
 
 
 def score_gap(requirements: list[dict], profile: str) -> dict:
-    if not llm.available() or not requirements.strip():
+    if not requirements or not profile.strip():
+        return {"available": False,
+                "note": "Gap scoring needs an LLM and a company profile."}
+    if not llm.available():
         return {"available": False,
                 "note": "Gap scoring needs an LLM and a company profile."}
 

@@ -7,6 +7,14 @@ services:
     envVars:
       - key: BC_ENV
         value: production
+      - key: BC_LLM_PROVIDER
+        value: gemini
+      - key: BC_GEMINI_MODEL
+        value: gemini-3.7-flash
+      - key: BC_GEMINI_API_KEY
+        sync: false
+      - key: BC_LLM_DELAY_MS
+        value: "2000"
       - key: BC_DATABASE_URL
         fromDatabase:
           name: bidgetcheck-db

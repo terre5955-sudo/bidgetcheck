@@ -88,19 +88,46 @@ Enforced in `app/main.py`, values in the environment.
 | Bid / no-bid verdict | no | yes |
 | Saved company profiles | yes | yes |
 
-## Two engines, and why the free tier works without an LLM
+## Two engines, and why the deterministic one still matters
 
-The deterministic engine in `app/rules.py` needs no external service and no API key. It finds
+The model reads the document. Every sentence it produces is checked back against the PDF and
+discarded if it cannot be found, so the model is never allowed to write the report.
+
+Underneath sits a deterministic engine in `app/rules.py` with no external dependency. It finds
 deadlines, disqualification language, mandatory clauses, enumerated document lists, monetary
 thresholds, and eleven compliance areas. On the sample tender it returns 4 deadlines and 26
-requirements, all page-cited.
+requirements, all page-cited, with no model involved.
 
-The LLM engine is optional. Locally it runs against Ollama at no cost. On a cloud host you
-would need a paid API, so the cloud deployment runs the deterministic engine only. That is
-deliberate: the free tier must not cost money per document, and a free-tier model would put
-the service to sleep during every long tender.
+It is not a fallback for nostalgia. It is what runs when the model provider is down, when the
+free quota is exhausted, or when the provider rejects the request. Free tiers are rate limited
+to roughly 30 requests per minute and a few thousand tokens per minute, so a long tender will
+hit the wall. When it does, the report is still produced and the engine field says which path
+ran. Never advertise a model you might silently stop using.
 
-Configure it anyway with `BC_LLM_PROVIDER=openai` and any OpenAI-compatible endpoint.
+## Providers
+
+Set `BC_LLM_PROVIDER` to one of:
+
+| Provider | Setup | Notes |
+|---|---|---|
+| `gemini` | `BC_GEMINI_API_KEY` | Default. Free tier, native JSON mode. |
+| `groq` | `BC_GROQ_API_KEY` | OpenAI-compatible, free tier, very fast. |
+| `ollama` | run Ollama locally | Free but only on your own machine. |
+| `openai` | `BC_OPENAI_API_KEY`, `BC_OPENAI_BASE_URL` | Also covers OpenRouter and Together. |
+
+`BC_LLM_DELAY_MS` spaces requests out. Free tiers allow around 30 requests per minute, so 2000
+is the safe setting in production.
+
+Free-tier limits change often and the documentation is not always consistent with the API.
+The reliable check is the API itself: `available()` calls the models endpoint and returns
+false if the key is missing or rejected, and `/api/status` surfaces that to the interface.
+
+### Fixing a critical bug this uncovered
+
+`score_gap` called `.strip()` on a list. With no model configured the function returned before
+reaching that line, so 49 tests passed and the bug shipped. The moment a real model was
+connected and a user supplied a company profile, every analysis would have failed with an
+unhandled exception. It is fixed and covered by four tests in `tests/llm_test.py`.
 
 ## The part that is not standard
 
