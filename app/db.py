@@ -120,6 +120,20 @@ class EventLog(Base):
 Index("ix_analyses_user_created", Analysis.user_id, Analysis.created_at)
 
 
+LOG_RETENTION_DAYS = int(os.getenv("BC_LOG_RETENTION_DAYS", "30"))
+
+
+def purge_old_logs(days: int = LOG_RETENTION_DAYS) -> int:
+    cutoff = utcnow() - timedelta(days=days)
+    with SessionLocal() as s:
+        deleted = s.query(EventLog).filter(EventLog.created_at < cutoff).delete(
+            synchronize_session=False)
+        s.commit()
+    if deleted:
+        log_event("logs_purged", detail=f"removed={deleted} cutoff_days={days}")
+    return deleted
+
+
 def new_id() -> str:
     return secrets.token_hex(8)
 

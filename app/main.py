@@ -46,6 +46,10 @@ COOKIE_SECURE = os.getenv("BC_COOKIE_SECURE", "1" if PRODUCTION else "0") == "1"
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     db.init_db()
+    try:
+        db.purge_old_logs()
+    except Exception as exc:
+        db.log_event("log_purge_failed", detail=str(exc)[:300])
     yield
 
 
