@@ -103,10 +103,20 @@ llm.complete = FakeProvider(response="this is not json at all")
 items4, meta4 = extract_requirements(chunks, scan)
 check("unparseable output falls back", meta4["engine"] == "rules", str(meta4))
 
+import app.analyze as analyze_mod
+llm.complete = FakeProvider(response=__import__("json").dumps(FAKE_RESPONSE))
+analyze_mod.LLM_MAX_CALLS = 2
+items5, meta5 = extract_requirements([chunks[0]] * 6, scan)
+check("llm call cap respected", meta5.get("chunks_ok") == 2, str(meta5))
+check("cap reported in engine metadata", meta5.get("call_cap") == 2, str(meta5))
+check("cap still returns usable requirements", len(items5) > 0, str(len(items5)))
+analyze_mod.LLM_MAX_CALLS = 8
+
 check("parse_json handles fence", llm.parse_json('```json\n{"a":1}\n```') == {"a": 1})
 check("parse_json handles prose", llm.parse_json('Sure! {"a":2} hope that helps') == {"a": 2})
 check("parse_json handles garbage", llm.parse_json("no json here") is None)
 
+llm.available = lambda force=False: False
 check("score_gap needs llm", score_gap([{"page": 1, "requirement": "x", "kind": "mandatory",
                                           "severity": 4}], "profile")["available"] is False)
 check("score_gap needs profile", score_gap([], "   ")["available"] is False)

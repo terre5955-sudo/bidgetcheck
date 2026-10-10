@@ -102,7 +102,9 @@ with TestClient(app) as client:
 
     check("markdown report", alice.get(f"/api/analyses/{ids[0]}/report.md").status_code == 200)
     check("html report", alice.get(f"/api/analyses/{ids[0]}/report.html").status_code == 200)
-    check("source pdf", alice.get(f"/api/analyses/{ids[0]}/source.pdf").status_code == 200)
+    src = alice.get(f"/api/analyses/{ids[0]}/source.pdf")
+    check("source pdf not retained, explains why", src.status_code == 410, f"status={src.status_code}")
+    check("source pdf message is user facing", "ephemeral" in src.json().get("detail", ""))
 
     bob = TestClient(app)
     bob.post("/api/auth/signup", data={"email": "bob@example.com", "password": "correcthorse1"})

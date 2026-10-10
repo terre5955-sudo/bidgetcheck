@@ -22,6 +22,8 @@ GEMINI_BASE = os.getenv("BC_GEMINI_BASE", "https://generativelanguage.googleapis
 GEMINI_MODEL = os.getenv("BC_GEMINI_MODEL", "gemini-3.7-flash")
 LLM_TIMEOUT = int(os.getenv("BC_LLM_TIMEOUT", "600"))
 LLM_DELAY_MS = int(os.getenv("BC_LLM_DELAY_MS", "0"))
+LLM_MAX_CALLS = int(os.getenv("BC_LLM_MAX_CALLS", "8"))
+STALE_ANALYSIS_SECONDS = int(os.getenv("BC_STALE_ANALYSIS_SECONDS", "420"))
 
 APP_ENV = os.getenv("BC_ENV", "development")
 SESSION_COOKIE = os.getenv("BC_SESSION_COOKIE", "bgc_session")

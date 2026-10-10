@@ -7,6 +7,10 @@ services:
     envVars:
       - key: BC_ENV
         value: production
+      - key: PUBLIC_BASE_URL
+        value: https://bidgetcheck.onrender.com
+      - key: BC_DATA_DIR
+        value: /tmp/data
       - key: BC_LLM_PROVIDER
         value: gemini
       - key: BC_GEMINI_MODEL
@@ -15,22 +19,23 @@ services:
         sync: false
       - key: BC_LLM_DELAY_MS
         value: "2000"
-      - key: BC_DATABASE_URL
-        fromDatabase:
-          name: bidgetcheck-db
-          property: connectionString
-      - key: BC_DATA_DIR
-        value: /data
-      - key: PUBLIC_BASE_URL
-        value: https://bidgetcheck.onrender.com
-      - key: BC_SESSION_TTL_DAYS
-        value: "30"
+      - key: BC_LLM_MAX_CALLS
+        value: "8"
+      - key: BC_STALE_ANALYSIS_SECONDS
+        value: "420"
       - key: BC_FREE_QUOTA
         value: "3"
       - key: BC_FREE_MAX_PAGES
         value: "80"
       - key: BC_PRO_QUOTA
         value: "150"
+      - key: BC_SESSION_TTL_DAYS
+        value: "30"
+      # Neon or any other external Postgres. NOT Render's free database,
+      # which is deleted 30 days after creation.
+      - key: BC_DATABASE_URL
+        sync: false
+      # Lemon Squeezy
       - key: LS_API_KEY
         sync: false
       - key: LS_STORE_ID
@@ -41,13 +46,12 @@ services:
         sync: false
       - key: LS_VARIANT_ONEOFF
         sync: false
-    disk:
-      name: uploads
-      mountPath: /data
-      sizeGB: 1
 
-databases:
-  - name: bidgetcheck-db
-    databaseName: bidgetcheck
-    user: bidgetcheck
-    plan: free
+# No `databases:` block on purpose. A free Render Postgres is deleted 30 days
+# after creation, taking every user account with it. Supply BC_DATABASE_URL
+# from Neon or another external provider instead.
+#
+# No `disk:` block on purpose. Persistent disks do not exist on the free plan,
+# and a free service loses all local files every time it sleeps after 15
+# minutes idle. Uploaded PDFs are therefore written to /tmp, analysed, and
+# deleted immediately. Reports live in the database and survive.

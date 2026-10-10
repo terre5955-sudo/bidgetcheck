@@ -5,7 +5,7 @@ import time
 from typing import Any
 
 from . import db, llm, rules
-from .config import LLM_DELAY_MS, MIN_VERIFIED_RATIO
+from .config import LLM_DELAY_MS, LLM_MAX_CALLS, MIN_VERIFIED_RATIO
 from .extract import Chunk, Page, chunk_pages, load_pages
 
 EXTRACT_PROMPT = llm.load_prompt("extract_requirements.md")
@@ -152,7 +152,7 @@ def extract_requirements(chunks: list[Chunk], scan: dict) -> tuple[list[dict], d
     rate_limited = False
 
     for chunk in chunks:
-        if rate_limited:
+        if rate_limited or ok >= LLM_MAX_CALLS:
             failed += 1
             continue
         user = (
@@ -211,9 +211,14 @@ def extract_requirements(chunks: list[Chunk], scan: dict) -> tuple[list[dict], d
 
     merged = _dedupe(collected + _fallback_requirements(scan))
     merged.sort(key=lambda r: (-r["severity"], r["page"]))
+    truncated = len(chunks) > LLM_MAX_CALLS
+    if truncated:
+        db.log_event("llm_call_cap_hit",
+                     detail=f"chunks={len(chunks)} cap={LLM_MAX_CALLS}; rest handled by rules engine")
     return merged[:MAX_REQUIREMENTS], {"engine": "llm", "verified_ratio": round(ratio, 3),
                                        "chunks_ok": ok, "chunks_failed": failed,
-                                       "hallucinations_blocked": blocked}
+                                       "hallucinations_blocked": blocked,
+                                       "call_cap": LLM_MAX_CALLS, "call_cap_hit": truncated}
 
 
 def _normalize_verdict(raw: Any) -> dict:

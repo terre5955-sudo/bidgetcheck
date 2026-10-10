@@ -25,7 +25,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import billing, db, llm, report, security
 from .analyze import analyze_file
-from .config import APP_ENV, SESSION_COOKIE, STATIC_DIR, UPLOAD_DIR
+from .config import APP_ENV, SESSION_COOKIE, STATIC_DIR, STALE_ANALYSIS_SECONDS, UPLOAD_DIR
 from .db import (
     SESSION_TTL_DAYS,
     SessionLocal,
@@ -46,10 +46,12 @@ COOKIE_SECURE = os.getenv("BC_COOKIE_SECURE", "1" if PRODUCTION else "0") == "1"
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     db.init_db()
-    try:
-        db.purge_old_logs()
-    except Exception as exc:
-        db.log_event("log_purge_failed", detail=str(exc)[:300])
+    for action, label in ((lambda: db.purge_old_logs(), "log_purge"),
+                          (lambda: _reap_stale(), "stale_reap")):
+        try:
+            action()
+        except Exception as exc:
+            db.log_event(f"{label}_failed", detail=str(exc)[:300])
     yield
 
 
@@ -125,6 +127,24 @@ def _run_analysis(aid: str, path: Path, filename: str, profile: str, user_id: st
     except Exception as exc:
         db.update_analysis(aid, status="error", error=str(exc)[:2000], finished_at=utcnow())
         db.log_event("failed", user_id=user_id, analysis_id=aid, detail=traceback.format_exc()[-1500:])
+    finally:
+        path.unlink(missing_ok=True)
+
+
+def _reap_stale() -> None:
+    cutoff = utcnow() - timedelta(seconds=STALE_ANALYSIS_SECONDS)
+    for row in db.list_analyses(user_id=None, limit=200):
+        if row["status"] not in ("queued", "running") or not row["created_at"]:
+            continue
+        started = row["created_at"]
+        if started.tzinfo is None:
+            started = started.replace(tzinfo=UTC)
+        if started < cutoff:
+            db.update_analysis(row["id"], status="error",
+                               error="The server was restarted while this document was being analysed. "
+                                     "Free hosting sleeps after 15 minutes idle. Upload it again.",
+                               finished_at=utcnow())
+            db.log_event("stale_reaped", analysis_id=row["id"])
 
 
 @app.get("/api/health")
@@ -322,10 +342,11 @@ def report_html(aid: str, user: dict = Depends(require_user)) -> HTMLResponse:
 @app.get("/api/analyses/{aid}/source.pdf")
 def source_pdf(aid: str, user: dict = Depends(require_user)) -> FileResponse:
     _owned(user, aid)
-    path = UPLOAD_DIR / f"{aid}.pdf"
-    if not path.exists():
-        raise HTTPException(404, "Source file no longer stored")
-    return FileResponse(path, media_type="application/pdf")
+    raise HTTPException(
+        410,
+        "Source PDFs are not retained. The host used for this deployment has an ephemeral "
+        "filesystem, so anything on disk is lost when the server sleeps. Your report is stored "
+        "and unaffected.")
 
 
 @app.get("/api/profiles")

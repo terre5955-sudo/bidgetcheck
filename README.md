@@ -42,24 +42,56 @@ Run the tests (49 checks: auth, quotas, tenant isolation, billing signature, ext
 
 ## Deploy
 
-**Render, one button, free tier.** Push the repo to GitHub, then in `render.yaml` change
-`PUBLIC_BASE_URL` to your own domain, and in the Render dashboard create the resources.
-The blueprint declares the web service, the Postgres database, and a 1 GB disk for uploads.
-Render asks for the four `LS_*` secret values as "sync: false" - paste them in the dashboard.
+Free hosting is the source of most of the constraints below. Verified against Render's
+own documentation, September 2026.
 
-Everything else is set for you in the blueprint.
+**The three facts that shape the architecture:**
 
-If you are not on Render, any platform running the `Dockerfile` works. The required
-environment variables are in `.env.example`. The hard requirements are:
+1. A free web service **sleeps after 15 minutes without traffic** and takes about a minute
+   to wake. A visitor arriving at a cold site waits on a loading page.
+2. A free service has **no persistent disk**. Everything written to the filesystem is lost
+   on every sleep, restart, or redeploy.
+3. A free Render Postgres is **deleted 30 days after creation**, after a 14-day grace
+   period. An expired database is inaccessible, and after the grace period it is gone.
 
-| Variable | Why |
-|---|---|
-| `BC_DATABASE_URL` | Postgres connection string, `postgresql+psycopg://...` |
-| `PUBLIC_BASE_URL` | absolute site URL, used in sitemap and robots |
-| `BC_ENV=production` | turns on secure cookies and disables the dev payment bypass |
-| `LS_API_KEY`, `LS_STORE_ID` | Lemon Squeezy credentials |
-| `LS_SIGNING_SECRET` | verifies that a payment webhook really came from Lemon Squeezy |
-| `LS_VARIANT_MONTHLY`, `LS_VARIANT_ONEOFF` | product variant IDs for the two plans |
+**What the code does about each:**
+
+1. `BC_LLM_MAX_CALLS` caps model calls per document, and `BC_LLM_DELAY_MS` paces them, so an
+   analysis finishes in well under a minute instead of running for as long as the model needs.
+   If a job is still unfinished after `BC_STALE_ANALYSIS_SECONDS`, startup reaps it and the
+   user is told the server restarted, rather than watching a spinner forever.
+2. Uploaded PDFs are written to a temporary directory, analysed, then deleted in a `finally`
+   block. Reports and company profiles live in Postgres and survive. `/source.pdf` returns
+   410 with an explanation rather than pretending.
+3. `render.yaml` declares **no** `databases:` block and **no** `disk:` block, both
+   deliberately. Supply `BC_DATABASE_URL` from an external provider.
+
+**Recommended free setup, no card required:**
+
+| Need | Service | Why not the obvious choice |
+|---|---|---|
+| Hosting | Render free web service | Sleeps after 15 min. Acceptable while there is no traffic. |
+| Database | Neon free Postgres | Render's free database is deleted after 30 days. Neon does not expire. |
+| AI | Gemini free tier | No card, native JSON mode. |
+| Payments | Lemon Squeezy | Merchant of Record, handles VAT across the EU. |
+
+**To deploy:**
+
+1. Create a free Postgres project at neon.com and copy its pooled connection string. It
+   starts with `postgresql://`, change the prefix to `postgresql+psycopg://`.
+2. Push this repository, then on render.com choose **New → Blueprint** and select it.
+3. Fill in the five values Render asks for: `BC_DATABASE_URL`, `BC_GEMINI_API_KEY`, and the
+   four `LS_*` payment values.
+4. Change `PUBLIC_BASE_URL` in `render.yaml` to your own domain before you rely on it in
+   legal text and the sitemap.
+
+The blueprint declares only the web service. There is no database and no disk, on purpose.
+
+**The honest cost of free hosting.** A customer who arrives at a cold site waits about a
+minute before the page loads. Free tiers of AI models run roughly 30 requests per minute, so
+documents longer than about eight chunks are partly handled by the deterministic engine. This
+is fine to validate the idea and not fine to sell. Once money arrives, hosting is $7 a month
+and that is not the expensive part.
 
 ## Payments
 
