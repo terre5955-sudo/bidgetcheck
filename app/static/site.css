@@ -1,0 +1,86 @@
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body {
+  margin: 0; font: 16px/1.6 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #15171c; background: #fff;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 22px; }
+a { color: #0a3fb0; }
+
+.bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #eceef1; }
+.brand { font-weight: 700; text-decoration: none; color: #15171c; font-size: 17px; }
+.nav-right { display: flex; gap: 18px; align-items: center; font-size: 14.5px; }
+.nav-right a { text-decoration: none; color: #4c5462; }
+.nav-right .cta { background: #15171c; color: #fff; padding: 8px 15px; border-radius: 6px; font-weight: 600; }
+
+header { padding: 66px 0 44px; border-bottom: 1px solid #eceef1; }
+header.slim { padding: 48px 0 30px; }
+h1 { font-size: 34px; line-height: 1.22; margin: 0 0 14px; letter-spacing: -.5px; }
+header.slim h1 { font-size: 30px; }
+.sub { font-size: 19px; color: #4c5462; margin: 0 0 6px; max-width: 62ch; }
+.fine { font-size: 13.5px; color: #7a8290; margin-top: 14px; }
+
+section { padding: 50px 0; border-bottom: 1px solid #eceef1; }
+section.alt { background: #f8f9fb; border: 0; }
+h2 { font-size: 23px; margin: 0 0 16px; letter-spacing: -.2px; }
+h3 { font-size: 16px; margin: 0 0 8px; }
+p { margin: 0 0 14px; max-width: 68ch; }
+ul, ol { padding-left: 21px; margin: 0 0 14px; }
+li { margin-bottom: 8px; }
+
+.cta { margin-top: 26px; display: flex; gap: 12px; flex-wrap: wrap; }
+.btn { display: inline-block; padding: 13px 24px; border-radius: 7px; font-weight: 600; text-decoration: none; text-align: center; }
+.btn.p { background: #15171c; color: #fff; }
+.btn.s { border: 1px solid #15171c; color: #15171c; }
+.btn.full { display: block; margin-top: 18px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 16px; }
+.card { border: 1px solid #e3e6ea; border-radius: 9px; padding: 17px; background: #fff; }
+.card b { display: block; margin-bottom: 5px; font-size: 15px; }
+.card span { color: #5c6474; font-size: 14px; }
+
+.ex { background: #f7f8fa; border-left: 3px solid #15171c; border-radius: 0 7px 7px 0; padding: 16px 18px; margin: 20px 0; }
+.ex .src { font-size: 12px; color: #7a8290; text-transform: uppercase; letter-spacing: .5px; margin-top: 10px; }
+
+.steps li { margin-bottom: 11px; }
+
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-bottom: 40px; }
+.plan { border: 1px solid #e3e6ea; border-radius: 11px; padding: 24px 22px; }
+.plan.featured { border-color: #15171c; box-shadow: 0 2px 0 #15171c; }
+.price { font-size: 38px; font-weight: 700; letter-spacing: -1.2px; margin: 8px 0 4px; }
+.price span { font-size: 16px; font-weight: 500; color: #5c6474; letter-spacing: 0; }
+
+.note { max-width: 70ch; margin-bottom: 26px; }
+.muted { color: #5c6474; }
+.small { font-size: 14px; }
+
+form { display: grid; gap: 11px; max-width: 520px; margin-top: 18px; }
+input, textarea {
+  width: 100%; padding: 12px 14px; border: 1px solid #c9ced6; border-radius: 7px;
+  font: inherit; font-size: 15px; resize: vertical; background: #fff; color: #15171c;
+}
+input:focus, textarea:focus { outline: 2px solid #15171c; outline-offset: -1px; }
+button {
+  justify-self: start; padding: 13px 26px; background: #15171c; color: #fff;
+  border: 0; border-radius: 7px; font: inherit; font-weight: 600; cursor: pointer;
+}
+button:disabled { opacity: .6; cursor: not-allowed; }
+
+body.center { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f5f6f8; }
+.authcard {
+  background: #fff; border: 1px solid #e3e6ea; border-radius: 12px;
+  padding: 34px 30px; width: 100%; max-width: 400px;
+}
+.authcard h1 { font-size: 23px; margin: 14px 0 6px; }
+.authcard form { margin-top: 18px; }
+.authcard .alt { font-size: 14px; margin: 16px 0 0; color: #5c6474; }
+.msg { font-size: 14px; margin: 12px 0 0; min-height: 20px; }
+
+footer { padding: 34px 0 56px; color: #7a8290; font-size: 13.5px; }
+footer a { color: #5c6474; }
+
+@media (max-width: 640px) {
+  h1 { font-size: 26px; }
+  header { padding: 40px 0 30px; }
+  .bar { flex-wrap: wrap; gap: 10px; }
+}

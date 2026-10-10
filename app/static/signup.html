@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Create account - BidGapCheck</title>
+<link rel="stylesheet" href="/static/site.css">
+</head>
+<body class="center">
+
+<div class="authcard">
+  <a class="brand" href="/">BidGapCheck</a>
+  <h1>Create your account</h1>
+  <p class="muted small">Three free documents a month. No card.</p>
+  <form onsubmit="event.preventDefault();submitAuth(event,'/api/auth/signup','/app');">
+    <input type="email" name="email" placeholder="Work email" required autocomplete="email">
+    <input type="password" name="password" placeholder="Password, at least 10 characters" required minlength="10" autocomplete="new-password">
+    <button type="submit">Create account</button>
+  </form>
+  <p class="msg" id="msg"></p>
+  <p class="alt">Already registered? <a href="/login">Sign in</a>.</p>
+</div>
+
+<script src="/static/auth.js"></script>
+</body>
+</html>

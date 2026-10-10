@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BidGapCheck - find what disqualifies you, before you write the proposal</title>
+<meta name="description" content="Upload a tender PDF. Get every mandatory requirement and disqualifying clause with a page number, verified word-for-word against the source. Free tier available.">
+<link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+
+<nav><div class="wrap bar">
+  <a class="brand" href="/">BidGapCheck</a>
+  <div class="nav-right">
+    <a href="/pricing">Pricing</a>
+    <a href="/login">Sign in</a>
+    <a class="cta" href="/signup">Start free</a>
+  </div>
+</div></nav>
+
+<header><div class="wrap">
+  <h1>Find the clause that disqualifies you<br>before you spend 40 hours on the proposal.</h1>
+  <p class="sub">Upload a tender PDF. Get back every mandatory requirement and every disqualifying clause, each with a page number, each verified word-for-word against the source document.</p>
+  <div class="cta">
+    <a class="btn p" href="/signup">Analyse 3 tenders free</a>
+    <a class="btn s" href="/pricing">See pricing</a>
+  </div>
+  <p class="fine">No credit card. Documents deleted on request. Your tender never touches a third-party AI service.</p>
+</div></header>
+
+<section><div class="wrap">
+  <h2>The problem nobody sells</h2>
+  <p>You are not disqualified because your price is wrong. You are disqualified because page 47 of a 180-page document says your insurance certificate must name the client as a co-insured, and nobody read page 47.</p>
+  <p>Bid platforms charge $89 to $1,299 a month and mostly help you <em>write faster</em>. They do not tell you whether to bid at all.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>What you get</h2>
+  <div class="grid">
+    <div class="card"><b>Every mandatory requirement</b><span>Severity-rated, with the page number and the original wording</span></div>
+    <div class="card"><b>Every document you must submit</b><span>Certificates, statements, schedules, forms, in order</span></div>
+    <div class="card"><b>Compliance checkpoints</b><span>Insurance, turnover, experience, key personnel, bid bond, page limits</span></div>
+    <div class="card"><b>Monetary thresholds</b><span>Bond amounts, insurance floors, turnover bars, and who they bind</span></div>
+    <div class="card"><b>Deadlines</b><span>Submission, clarification, validity, bond validity, with page numbers</span></div>
+    <div class="card"><b>Bid / no-bid verdict</b><span>Against your own company profile, not generic advice</span></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>The part that matters</h2>
+  <p>Every quote in the report is checked against the source PDF. If the tool cannot point at the exact sentence in your document, that line is deleted rather than shown. A bid manager does not have time to verify a hallucinated clause. You do not get to send them one.</p>
+  <div class="ex">
+    <b>"Failure to disclose litigation will render the tender non-responsive."</b>
+    <div class="muted">Classified: Disqualifying &middot; Severity 5 &middot; Page 2</div>
+    <div class="src">Verbatim from the source document</div>
+  </div>
+</div></section>
+
+<section class="alt"><div class="wrap">
+  <h2>How it works</h2>
+  <ol class="steps">
+    <li><b>Create an account.</b> Email and a password. Nothing else.</li>
+    <li><b>Upload the tender PDF.</b> Up to 40 MB. It stays on the server only as long as you need the report.</li>
+    <li><b>Read the report.</b> A web view plus a standalone HTML file you can forward to a bid manager or a client.</li>
+    <li><b>Delete everything.</b> One button removes your account, documents and profiles permanently.</li>
+  </ol>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Start free</h2>
+  <p class="muted">No account yet? Leave the tender reference and we will send you the deadline and the top five risks, free.</p>
+  <form onsubmit="event.preventDefault();sendWaitlist(this);">
+    <input type="email" name="email" placeholder="Work email" required>
+    <input type="text" name="company" placeholder="Company name">
+    <input type="text" name="tender" placeholder="Tender reference or title">
+    <textarea name="note" rows="2" placeholder="Contract value, if you know it. Optional."></textarea>
+    <button type="submit">Request the free scan</button>
+  </form>
+  <p id="waitmsg" class="muted"></p>
+</div></section>
+
+<footer><div class="wrap">
+  <p>Assists a human decision. Does not replace legal or procurement review, and does not guarantee award.</p>
+  <p><a href="/legal/terms">Terms</a> &middot; <a href="/legal/privacy">Privacy</a> &middot; <a href="/pricing">Pricing</a></p>
+</div></footer>
+
+<script>
+async function sendWaitlist(form) {
+  const msg = document.getElementById("waitmsg");
+  msg.textContent = "Sending...";
+  const body = new FormData(form);
+  try {
+    const r = await fetch("/api/waitlist", { method: "POST", body });
+    if (!r.ok) throw new Error("invalid");
+    form.reset();
+    msg.textContent = "Received. If the reference is live you will have the deadline and top five risks within 24 hours.";
+  } catch {
+    msg.textContent = "Something went wrong. Email us instead.";
+  }
+}
+</script>
+</body>
+</html>

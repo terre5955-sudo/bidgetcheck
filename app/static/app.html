@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BidGapCheck - analyse a tender</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <div class="wrap head">
+    <a class="brand" href="/app">BidGapCheck</a>
+    <div class="head-right">
+      <span id="plan" class="badge">plan</span>
+      <span id="usage" class="badge soft">usage</span>
+      <button id="upgrade" class="mini" hidden>Upgrade</button>
+      <a id="logout" class="mini" href="/">Sign out</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="engineNote" class="notice" hidden></div>
+
+  <section class="card">
+    <h2>1. Tender document</h2>
+    <form id="form">
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept="application/pdf" hidden>
+        <span id="dropLabel">Drop a tender PDF here or click to choose</span>
+      </label>
+      <div class="filename" id="filename"></div>
+
+      <label class="lbl">Company profile <span class="opt">needed for a bid / no-bid verdict</span></label>
+      <div class="profilerow">
+        <select id="profileName">
+          <option value="">new profile</option>
+        </select>
+        <button type="button" id="saveProfile" class="mini alt">Save</button>
+      </div>
+      <textarea id="profile" rows="8" placeholder="Registrations, certifications, annual turnover, years trading, insurance limits, key personnel, completed projects, typical contract value, countries worked in."></textarea>
+
+      <button type="submit" id="submit">Run analysis</button>
+      <span id="state" class="state"></span>
+    </form>
+  </section>
+
+  <section class="card" id="resultCard" hidden>
+    <h2>2. Result</h2>
+    <div id="verdict"></div>
+    <div id="tables"></div>
+    <p class="exports">
+      <a id="expMd" href="#" target="_blank">Markdown report</a>
+      <a id="expHtml" href="#" target="_blank">HTML report (send this to the client)</a>
+      <a id="expSrc" href="#" target="_blank">Source PDF</a>
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Your documents</h2>
+    <ul id="history" class="history"><li class="muted">none yet</li></ul>
+  </section>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
